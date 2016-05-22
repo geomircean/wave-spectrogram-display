@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import Spectrogram from 'spectrogram';
-const url = 'media/female.wav';
+const url = '../media/ethos_final_hope.mp3';
 
 class SpectrogramComponent extends Component {
   constructor(props) {
@@ -12,12 +12,11 @@ class SpectrogramComponent extends Component {
     this.request.open('GET', url, true);
     this.request.responseType = 'arraybuffer';
     this.request.onload = onLoad || function () {};
-    console.log('sending from spectro');
     this.request.send();
   }
 
   onAudioLoad() {
-    console.log('Spectrogram Response', this.request.response);
+    const { audioContext } = this.props;
     this.props.audioContext.decodeAudioData(this.request.response)
       .then((buffer) => {
         this.spectro.addSource(buffer, this.props.audioContext);

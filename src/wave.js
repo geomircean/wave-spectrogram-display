@@ -1,7 +1,6 @@
 import React, {Component} from 'react';
 import Waveform from 'audio-waveform';
-
-const url = 'media/female.wav';
+const url = '../media/ethos_final_hope.mp3';
 
 class Wave extends Component {
   static displayName = 'Wave';
@@ -10,33 +9,46 @@ class Wave extends Component {
     super(props);
 
     this.plotter = new Waveform({
-      channel: 0, size: 1024, offset: undefined, framesPerSecond: 20, line: true, bufferSize: 44100, canvas: this.refs.wave
+      channel: 0,
+      size: 1024,
+      offset: undefined,
+      framesPerSecond: 20,
+      line: true,
+      bufferSize: 44100,
+      canvas: this.canvas
     });
+    this.analyser = props.audioContext.createAnalyser();
   }
 
-  renderWave() {
+  renderWave(res) {
     const { audioContext } = this.props;
-    this.source = audioContext.createBufferSource();
-    console.log('Wave', this.request.response);
+    this.source = audioContext.createBufferSource(res.byteLength);
 
-    audioContext.decodeAudioData(this.request.response)
-      .then(buffer => {
-        this.source.buffer = buffer;
+    audioContext.decodeAudioData(res)
+      .then((data) => {
+        this.source.buffer = data;
         this.source.connect(audioContext.destination);
-        this.source.buffer.pipe(this.plotter);
-      })
-      .catch((e) => {
+        this.source.start();
+        // this.source.pipe(this.plotter);
+      }).catch((e) => {
         console.warn('No audio data (wave)!', e);
       });
   }
 
   fetch(onLoad) {
-    this.request = new XMLHttpRequest();
-    this.request.open('GET', url, true);
-    this.request.responseType = 'arraybuffer';
-    this.request.onload = onLoad;
-    console.log('sending from wave');
-    this.request.send();
+    const request = new XMLHttpRequest();
+    request.open('GET', url, true);
+    request.responseType = 'arraybuffer';
+    request.onload = () => {
+      if (request.readyState === 4) {
+        if (request.status === 200) {
+          onLoad(request.response)
+        } else {
+          console.error(request.statusText);
+        }
+      }
+    };
+    request.send(null);
   }
 
   componentWillMount() {
@@ -44,7 +56,7 @@ class Wave extends Component {
   }
 
   render() {
-    return <canvas ref='wave'/>
+    return <canvas ref={(node) => (this.canvas = node)}/>
   }
 }
 export default Wave;

@@ -47,6 +47,7 @@
     "audio-generator": "^2.0.3",
     "audio-render": "^2.0.1",
     "audio-spectrogram": "^1.0.0",
-    "spectrogram": "^0.0.3"
+    "spectrogram": "^0.0.3",
+    "react-audio": "^0.0.1"
   }
 }
