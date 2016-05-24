@@ -15,6 +15,10 @@ app.use(require('webpack-dev-middleware')(compiler, {
 
 app.use(require('webpack-hot-middleware')(compiler));
 
+app.get('/static/media/:filename', function(req, res) {
+  res.sendFile(path.join(__dirname, './media/' + req.params.filename));
+});
+
 app.get('*', function(req, res) {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
