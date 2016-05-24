@@ -1,10 +1,21 @@
 import React, { Component } from 'react';
 import Spectrogram from 'spectrogram';
-const url = '../media/ethos_final_hope.mp3';
+import audioBufferSlice from './audio-buffer-slice';
+
+const url = '/static/media/female.wav';
 
 class SpectrogramComponent extends Component {
   constructor(props) {
     super(props);
+  }
+
+  spectroCallback(songBuffer) {
+    const { audioContext } = this.props;
+    this.spectro.connectSource(songBuffer, audioContext);
+    this.spectro.start();
+    // if (songBuffer.length) {
+    //   this.spectro.pause();
+    // }
   }
 
   fetch(onLoad) {
@@ -17,34 +28,46 @@ class SpectrogramComponent extends Component {
 
   onAudioLoad() {
     const { audioContext } = this.props;
+
     this.props.audioContext.decodeAudioData(this.request.response)
       .then((buffer) => {
-        this.spectro.addSource(buffer, this.props.audioContext);
-        this.spectro.start();
+        this.spectro = Spectrogram(
+          document.getElementById('spectro'), {
+          canvas: {
+            height: 200,
+            width: 300
+          },
+          audio: {
+            enable: true
+          }
+        });
+        //window.spectro = this.spectro;
+        audioBufferSlice(audioContext, buffer, 0, buffer.length, (error, buf) => {
+          this.spectroCallback(buf);
+        });
       }).catch((e) => {
-        console.warn('No audio data (spectro)!', e);
+        console.warn(e);
     });
   }
 
-  componentWillMount() {
+  componentDidMount() {
     this.fetch(this.onAudioLoad.bind(this));
   }
 
-  componentDidMount() {
-    if (this.canvas) {
-      this.spectro = Spectrogram(this.canvas, {
-        canvas: {
-          height: 400,
-          width: 1000
-        },
-        audio: {
-          enable: true
-        }
-      });
-
-      window.spectro = this.spectro;
-    }
-  }
+  // componentDidMount() {
+  //   if (this.canvas) {
+  //     this.spectro = Spectrogram(document.getElementById('spectro'), {
+  //       canvas: {
+  //         height: 400,
+  //         width: 1000
+  //       },
+  //       audio: {
+  //         enable: true
+  //       }
+  //     });
+  //     window.spectro = this.spectro;
+  //   }
+  // }
 
   render() {
     const { title } = this.props;
@@ -52,7 +75,8 @@ class SpectrogramComponent extends Component {
     return (
       <div>
         <h4>{title}</h4>
-        <canvas ref={(node) => (this.canvas = node)}>
+        <canvas //ref={(node) => (this.canvas = node)}
+          id='spectro' >
         </canvas>
       </div>
     );
