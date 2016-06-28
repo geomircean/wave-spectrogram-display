@@ -1,84 +1,51 @@
 import React, {Component} from 'react';
-import Waveform from 'audio-waveform';
-import Generator from 'audio-generator';
-import pcm from 'pcm-util';
-const url = '/static/media/female.wav';
+import WaveformData from 'waveform-data';
+const url = '/static/media/sample.mp3';
 
 class Wave extends Component {
   static displayName = 'Wave';
 
   constructor(props) {
     super(props);
-    this.analyser = props.audioContext.createAnalyser();
-    pcm.defaults = {
-      channels: 1,
-      sampleRate: 44100,
-      interleaved: true,
-      float: true,
-      signed: true,
-      bitDepth: 16,
-      byteOrder: 'LE',
-      max: 32767,
-      min: -32768,
-      sampleSize: 4,
-      samplesPerFrame: 1024,
-      id: 'S_16_LE_2_44100_I'
-    };
-
   }
 
-  renderWave(res) {
-    const { audioContext } = this.props;
-    this.source = audioContext.createBufferSource();
+  renderWave() {
+    var waveform = WaveformData.create(this.request.response);
+    console.log(waveform.max.length);
+    //var waveform = waveform.resample({ scale: waveform.adapter.scale * 0.1 });
+    const canvas = document.getElementById('wave');
+    var interpolateHeight = function interpolateHeightGenerator (total_height){
+      var amplitude = 256;
+      return function interpolateHeight (size){
+        return total_height - ((size + 128) * total_height) / amplitude;
+      };
+    };
+    var y = interpolateHeight(this.canvas.height);
+    var ctx = canvas.getContext('2d');
+    ctx.beginPath();
 
-    audioContext.decodeAudioData(res)
-      .then((data) => {
-        this.plotter = new Waveform({
-          channel: 0,
-          size: 1024,
-          offset: undefined,
-          framesPerSecond: 20,
-          line: true,
-          bufferSize: 44100,
-          canvas: document.getElementById('wave')
-        });
-        console.log(data);
-        this.generator = Generator(
-          () => {
-            this.analyser.fftSize = 2048;
-            var bufferLength = this.analyser.frequencyBinCount;
-            const dataArray = new Uint8Array(bufferLength);
-            const stream = this.analyser.getByteTimeDomainData(dataArray);
-            return stream;
-          }, {
-            duration: data.length,
-            period: Infinity
-          })
-          .on('error', function (e) {
-            console.warn(e);
-          })
-          .pipe(this.plotter);
+// from 0 to 100
+    waveform.min.forEach((val, x) => {
+      ctx.lineTo(x + 0.5, y(val) + 0.5);
+    });
 
-      }).catch((e) => {
-        console.warn('No audio data (wave)!', e);
-      });
+// then looping back from 100 to 0
+    waveform.max.reverse().forEach((val, x) => {
+      ctx.lineTo((waveform.offset_length - x) + 0.5, y(val) + 0.5);
+    });
+
+    ctx.closePath();
+    ctx.fill();
+    // ctx.stroke();
+
   }
 
   fetch(onLoad) {
-    const request = new XMLHttpRequest();
-    request.open('GET', url, true);
-    request.responseType = 'arraybuffer';
-    request.onload = () => {
-      console.log(request.response);
-      if (request.readyState === 4) {
-        if (request.status === 200) {
-          onLoad(request.response)
-        } else {
-          console.error(request.statusText);
-        }
-      }
-    };
-    request.send(null);
+    this.request = new XMLHttpRequest();
+    this.request.open('GET', url, true);
+    this.request.responseType = 'arraybuffer';
+    this.request.onload = onLoad || function () {};
+    this.request.send();
   }
 
   componentDidMount() {
@@ -86,9 +53,9 @@ class Wave extends Component {
   }
 
   render() {
-    return <canvas id='wave' />;
+    return <canvas id='wave' ref={(node) => (this.canvas = node)}/>
   }
 }
 export default Wave;
 
-//ref={(node) => (this.canvas = node)}/>
+

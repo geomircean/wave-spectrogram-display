@@ -1,21 +1,20 @@
 import React, { Component } from 'react';
 import Spectrogram from 'spectrogram';
-import audioBufferSlice from './audio-buffer-slice';
 
-const url = '/static/media/female.wav';
+const url = '/static/media/sample.mp3';
 
 class SpectrogramComponent extends Component {
   constructor(props) {
     super(props);
   }
 
-  spectroCallback(songBuffer) {
-    const { audioContext } = this.props;
+  spectroCallback(songBuffer, source) {
+    const { audioContext, callBacks } = this.props;
     this.spectro.connectSource(songBuffer, audioContext);
-    this.spectro.start();
-    // if (songBuffer.length) {
-    //   this.spectro.pause();
-    // }
+    source.connect(audioContext.destination);
+    source.loop = true;
+   //this.spectro.start();
+    callBacks(this.spectro, source);
   }
 
   fetch(onLoad) {
@@ -28,22 +27,21 @@ class SpectrogramComponent extends Component {
 
   onAudioLoad() {
     const { audioContext } = this.props;
+    let source = audioContext.createBufferSource();
 
-    this.props.audioContext.decodeAudioData(this.request.response)
+    audioContext.decodeAudioData(this.request.response)
       .then((buffer) => {
+        source.buffer = buffer;
         this.spectro = Spectrogram(
           document.getElementById('spectro'), {
           canvas: {
             height: 200,
-            width: 300
-          },
-          audio: {
-            enable: true
+            width: 600
           }
         });
-        //window.spectro = this.spectro;
+        window.spectro = this.spectro;
         audioBufferSlice(audioContext, buffer, 0, buffer.length, (error, buf) => {
-          this.spectroCallback(buf);
+          this.spectroCallback(buffer, source);
         });
       }).catch((e) => {
         console.warn(e);
@@ -53,21 +51,6 @@ class SpectrogramComponent extends Component {
   componentDidMount() {
     this.fetch(this.onAudioLoad.bind(this));
   }
-
-  // componentDidMount() {
-  //   if (this.canvas) {
-  //     this.spectro = Spectrogram(document.getElementById('spectro'), {
-  //       canvas: {
-  //         height: 400,
-  //         width: 1000
-  //       },
-  //       audio: {
-  //         enable: true
-  //       }
-  //     });
-  //     window.spectro = this.spectro;
-  //   }
-  // }
 
   render() {
     const { title } = this.props;
