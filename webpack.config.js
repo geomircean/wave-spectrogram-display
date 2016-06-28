@@ -20,7 +20,16 @@ module.exports = {
     new webpack.NoErrorsPlugin()
   ],
   module: {
-    loaders: [{
+    loaders: [// Load LESS
+      { test: /\.less$/, loader: "style!css!autoprefixer!less" },
+
+      // Load SCSS
+      { test: /\.scss$/, loader: "style!css!autoprefixer!sass" },
+
+      // Load plain-ol' vanilla CSS
+      { test: /\.css$/, loader: "style!css" },
+
+      {
       test: /\.js$/,
       loader: 'babel',
       query: {
