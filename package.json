@@ -49,6 +49,9 @@
     "audio-spectrogram": "^1.0.0",
     "spectrogram": "^0.0.3",
     "react-audio": "^0.0.1",
-    "pcm-util": "^2.0.2"
+    "pcm-util": "^2.0.2",
+    "waveform-data": "^1.5.1",
+    "draw-wave": "^2.0.0",
+    "sillyscope": "^0.2.1"
   }
 }
